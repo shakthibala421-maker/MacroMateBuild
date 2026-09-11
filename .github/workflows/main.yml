@@ -15,6 +15,13 @@ jobs:
         run: |
           unzip -q "MacroMate-android-project.zip" -d project
 
+      - name: Find Gradle version
+        run: |
+          cat project/MacroMate/gradle/wrapper/gradle-wrapper.properties
+          VERSION=$(grep distributionUrl project/MacroMate/gradle/wrapper/gradle-wrapper.properties | sed -E 's/.*gradle-([0-9.]+)-.*/\1/')
+          echo "GRADLE_VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "Gradle version: $VERSION"
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -23,12 +30,13 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: ${{ env.GRADLE_VERSION }}
 
       - name: Build APK
         working-directory: project/MacroMate
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
